@@ -24,8 +24,8 @@
   #digitalTime {
     font-size: 60px;
     color: lime;
-    height: 70px;       /* reserve space so button doesn't move */
-    margin: 10px 0 0 0; /* keep spacing consistent */
+    height: 70px;
+    margin: 10px 0 0 0;
   }
 </style>
 </head>
@@ -48,14 +48,12 @@ toggleBtn.addEventListener('click', () => {
     toggleBtn.innerText = showDigital ? "Hide Digital Clock" : "Show Digital Clock";
 });
 
-// Positions for binary LEDs
 const xPositions = [80, 130, 180, 230, 280, 330];
 const yPositions = [80, 110, 140, 170];
 
-// Draw a single LED
 function drawLED(x, y, on) {
     ctx.beginPath();
-    ctx.arc(x, y, 12, 0, Math.PI * 2);  // radius 12 like Python version
+    ctx.arc(x, y, 12, 0, Math.PI * 2);
     ctx.fillStyle = on ? 'lime' : 'black';
     ctx.strokeStyle = 'lime';
     ctx.lineWidth = 2;
@@ -63,7 +61,6 @@ function drawLED(x, y, on) {
     ctx.stroke();
 }
 
-// Convert digit to 4-bit binary
 function digitToBinary(digit) {
     return digit.toString(2).padStart(4, '0').split('').map(Number);
 }
@@ -71,7 +68,7 @@ function digitToBinary(digit) {
 function drawClock() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const now = new Date();
+    const now = new Date(); // ALWAYS get exact current time
     const h = now.getHours();
     const m = now.getMinutes();
     const s = now.getSeconds();
@@ -81,20 +78,19 @@ function drawClock() {
     for (let col = 0; col < digits.length; col++) {
         const bin = digitToBinary(digits[col]);
         for (let row = 0; row < 4; row++) {
-            // skip unused bits like Python version
             if ((col === 0 && row < 2) || (col === 2 && row === 0) || (col === 4 && row === 0)) continue;
             drawLED(xPositions[col], yPositions[row], bin[row] === 1);
         }
     }
 
-    // Show digital clock, but keep space reserved
     digitalTime.innerText = showDigital ? 
         `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}` 
         : '';
+
+    requestAnimationFrame(drawClock); // perfect sync
 }
 
-// Update every 500ms
-setInterval(drawClock, 500);
+drawClock(); // start animation
 </script>
 
 </body>
