@@ -2,95 +2,107 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Binary Clock</title>
 <style>
   body {
-    background: black;
-    color: white;
-    font-family: sans-serif;
-    text-align: center;
+    background-color: black;
+    color: lime;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
   }
   canvas {
-    background: black;
-    display: block;
-    margin: 0 auto;
+    background-color: black;
   }
-  button {
-    font-size: 20px;
+  #toggleButton {
+    margin-top: 20px;
     padding: 10px 20px;
-    margin-top: 10px;
+    font-size: 16px;
+    font-weight: bold;
     cursor: pointer;
-  }
-  #digitalTime {
-    font-size: 60px;
-    color: lime;
-    height: 70px;
-    margin: 10px 0 0 0;
   }
 </style>
 </head>
 <body>
 
-<h1 style="color:white;">Binary Clock</h1>
-<canvas id="clockCanvas" width="400" height="300"></canvas>
-<p id="digitalTime"></p>
-<button id="toggleBtn">Show Digital Clock</button>
+<canvas id="clockCanvas" width="600" height="400"></canvas>
+<button id="toggleButton">Show Digital Clock</button>
 
 <script>
-const canvas = document.getElementById('clockCanvas');
-const ctx = canvas.getContext('2d');
-const toggleBtn = document.getElementById('toggleBtn');
-const digitalTime = document.getElementById('digitalTime');
+const canvas = document.getElementById("clockCanvas");
+const ctx = canvas.getContext("2d");
 
-let showDigital = false;
-toggleBtn.addEventListener('click', () => {
-    showDigital = !showDigital;
-    toggleBtn.innerText = showDigital ? "Hide Digital Clock" : "Show Digital Clock";
-});
+let showClock = false;
 
-const xPositions = [80, 130, 180, 230, 280, 330];
-const yPositions = [80, 110, 140, 170];
-
-function drawLED(x, y, on) {
-    ctx.beginPath();
-    ctx.arc(x, y, 12, 0, Math.PI * 2);
-    ctx.fillStyle = on ? 'lime' : 'black';
-    ctx.strokeStyle = 'lime';
-    ctx.lineWidth = 2;
-    ctx.fill();
-    ctx.stroke();
-}
-
-function digitToBinary(digit) {
-    return digit.toString(2).padStart(4, '0').split('').map(Number);
-}
-
+// Draw the binary clock
 function drawClock() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const now = new Date(); // ALWAYS get exact current time
-    const h = now.getHours();
-    const m = now.getMinutes();
-    const s = now.getSeconds();
+    const w = canvas.width;
+    const h = canvas.height;
 
-    const digits = [Math.floor(h/10), h%10, Math.floor(m/10), m%10, Math.floor(s/10), s%10];
+    // spacing
+    const startX = w * 0.2;
+    const startY = h * 0.2;
+    const spacingX = w * 0.08;
+    const spacingY = h * 0.08;
+    const r = Math.min(w, h) * 0.02;
 
-    for (let col = 0; col < digits.length; col++) {
-        const bin = digitToBinary(digits[col]);
+    const now = new Date();
+    const digits = [
+        Math.floor(now.getHours() / 10), now.getHours() % 10,
+        Math.floor(now.getMinutes() / 10), now.getMinutes() % 10,
+        Math.floor(now.getSeconds() / 10), now.getSeconds() % 10
+    ];
+
+    // draw circles
+    for (let col = 0; col < 6; col++) {
+        const binary = digits[col].toString(2).padStart(4, '0');
         for (let row = 0; row < 4; row++) {
-            if ((col === 0 && row < 2) || (col === 2 && row === 0) || (col === 4 && row === 0)) continue;
-            drawLED(xPositions[col], yPositions[row], bin[row] === 1);
+            const x = startX + col * spacingX;
+            const y = startY + (3 - row) * spacingY;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, 2 * Math.PI);
+            if (binary[row] === "1") {
+                ctx.fillStyle = "lime";
+                ctx.fill();
+            }
+            ctx.strokeStyle = "lime";
+            ctx.stroke();
         }
     }
 
-    digitalTime.innerText = showDigital ? 
-        `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}` 
-        : '';
+    // title
+    ctx.fillStyle = "white";
+    ctx.font = `${w * 0.04}px Arial`;
+    ctx.textAlign = "center";
+    ctx.fillText("Binary Clock", w / 2, h * 0.08);
 
-    requestAnimationFrame(drawClock); // perfect sync
+    // digital clock
+    if (showClock) {
+        ctx.fillStyle = "lime";
+        ctx.font = `${w * 0.06}px Arial`;
+        ctx.fillText(
+            now.toLocaleTimeString('en-US', { hour12: false }),
+            w / 2, h * 0.75
+        );
+    }
+
+    requestAnimationFrame(drawClock);
 }
 
-drawClock(); // start animation
+// Button toggle
+document.getElementById("toggleButton").addEventListener("click", () => {
+    showClock = !showClock;
+    document.getElementById("toggleButton").textContent = showClock ? "Hide Digital Clock" : "Show Digital Clock";
+});
+
+drawClock();
 </script>
 
 </body>
