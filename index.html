@@ -7,7 +7,7 @@
 <style>
   body {
     background-color: black;
-    color: lime;
+    color: white;
     font-family: Arial, sans-serif;
     display: flex;
     flex-direction: column;
@@ -21,16 +21,16 @@
   }
   #toggleButton {
     margin-top: 20px;
-    padding: 10px 20px;
+    padding: 15px 25px; /* taller button */
     font-size: 16px;
-    font-weight: bold;
+    font-weight: normal;
     cursor: pointer;
   }
 </style>
 </head>
 <body>
 
-<canvas id="clockCanvas" width="600" height="400"></canvas>
+<canvas id="clockCanvas" width="700" height="400"></canvas>
 <button id="toggleButton">Show Digital Clock</button>
 
 <script>
@@ -39,19 +39,22 @@ const ctx = canvas.getContext("2d");
 
 let showClock = false;
 
-// Draw the binary clock
 function drawClock() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     const w = canvas.width;
     const h = canvas.height;
 
-    // spacing
-    const startX = w * 0.2;
-    const startY = h * 0.2;
-    const spacingX = w * 0.08;
-    const spacingY = h * 0.08;
-    const r = Math.min(w, h) * 0.02;
+    const cols = 6;
+    const rows = 4;
+
+    const r = Math.min(w, h) * 0.03;
+    const spacingX = r * 4;
+    const spacingY = r * 4;
+
+    const totalWidth = spacingX * (cols - 1);
+    const totalHeight = spacingY * (rows - 1);
+    const startX = (w - totalWidth) / 2;
+    const startY = (h - totalHeight) / 2 - r;
 
     const now = new Date();
     const digits = [
@@ -61,42 +64,59 @@ function drawClock() {
     ];
 
     // draw circles
-    for (let col = 0; col < 6; col++) {
+    for (let col = 0; col < cols; col++) {
         const binary = digits[col].toString(2).padStart(4, '0');
-        for (let row = 0; row < 4; row++) {
+        for (let row = 0; row < rows; row++) {
             const x = startX + col * spacingX;
-            const y = startY + (3 - row) * spacingY;
+            const y = startY + row * spacingY;
+
             ctx.beginPath();
             ctx.arc(x, y, r, 0, 2 * Math.PI);
+            ctx.strokeStyle = "lime";
+            ctx.stroke();
+
             if (binary[row] === "1") {
                 ctx.fillStyle = "lime";
                 ctx.fill();
             }
-            ctx.strokeStyle = "lime";
-            ctx.stroke();
         }
     }
 
-    // title
+    // title bold
     ctx.fillStyle = "white";
-    ctx.font = `${w * 0.04}px Arial`;
+    ctx.font = `bold ${w*0.04}px Arial`;
     ctx.textAlign = "center";
-    ctx.fillText("Binary Clock", w / 2, h * 0.08);
+    ctx.fillText("Binary Clock", w/2, startY - spacingY*2);
 
-    // digital clock
+    // row labels (1,2,4,8) on left - original spacing
+    ctx.textAlign = "right";
+    const binaryLabels = [8, 4, 2, 1];
+    ctx.font = `${r*1.5}px Arial`;
+    for (let row = 0; row < rows; row++) {
+        const y = startY + row * spacingY + r/2;
+        ctx.fillText(binaryLabels[row], startX - spacingX*0.5, y);
+    }
+
+    // column labels (H,M,S) below circles - vertical spacing matches row labels
+    ctx.textAlign = "center";
+    const colLabels = ["H", "H", "M", "M", "S", "S"];
+    const labelsY = startY + totalHeight + spacingY*1.0; // adjusted to align
+    for (let col = 0; col < cols; col++) {
+        const x = startX + col * spacingX;
+        ctx.fillText(colLabels[col], x, labelsY);
+    }
+
+    // digital clock slightly higher to be fully visible
     if (showClock) {
         ctx.fillStyle = "lime";
-        ctx.font = `${w * 0.06}px Arial`;
-        ctx.fillText(
-            now.toLocaleTimeString('en-US', { hour12: false }),
-            w / 2, h * 0.75
-        );
+        ctx.font = `${w*0.06}px Arial`;
+        const clockY = labelsY + spacingY*1.5; 
+        ctx.fillText(now.toLocaleTimeString('en-US', {hour12:false}), w/2, clockY);
     }
 
     requestAnimationFrame(drawClock);
 }
 
-// Button toggle
 document.getElementById("toggleButton").addEventListener("click", () => {
     showClock = !showClock;
     document.getElementById("toggleButton").textContent = showClock ? "Hide Digital Clock" : "Show Digital Clock";
